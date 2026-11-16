@@ -1,54 +1,61 @@
 import { create } from 'zustand';
 
+export interface MediaAsset {
+  id: string;
+  name: string;
+  type: 'video' | 'audio';
+  src: string;
+  duration: number;
+}
+
 export interface TrackItem {
   id: string;
+  mediaId: string;
   name: string;
   type: 'video' | 'audio' | 'text';
   src: string;
-  startTime: number; // En segundos
-  duration: number;  // En segundos
-  trackIndex: number; // Capa/Pista (0, 1, 2...)
+  startTime: number;
+  duration: number;
+  trimStart: number;
+  trackIndex: number;
 }
 
 interface TimelineState {
   currentTime: number;
   isPlaying: boolean;
-  zoom: number;
+  mediaPool: MediaAsset[];
   items: TrackItem[];
   selectedItemId: string | null;
-  
-  // Acciones
+
   setCurrentTime: (time: number) => void;
   togglePlay: () => void;
   selectItem: (id: string | null) => void;
+  addMedia: (media: MediaAsset) => void;
   addItem: (item: TrackItem) => void;
-  splitItemAtCurrentTime: () => void; // El mítico 'S' de Sony Vegas
+  splitItemAtCurrentTime: () => void;
+  removeSelectedItem: () => void;
 }
 
 export const useTimelineStore = create<TimelineState>((set, get) => ({
   currentTime: 0,
   isPlaying: false,
-  zoom: 10, // Pixeles por segundo
+  mediaPool: [],
+  items: [],
   selectedItemId: null,
-  items: [
-    {
-      id: 'demo-1',
-      name: 'Clip_Ejemplo.mp4',
-      type: 'video',
-      src: '',
-      startTime: 0,
-      duration: 8,
-      trackIndex: 0,
-    },
-  ],
 
   setCurrentTime: (time) => set({ currentTime: Math.max(0, time) }),
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
   selectItem: (id) => set({ selectedItemId: id }),
-  
-  addItem: (item) => set((state) => ({ items: [...state.items, item] })),
 
-  // Acción para dividir el clip bajo el cabezal de reproducción (Atajo 'S')
+  addMedia: (media) => set((state) => ({
+    mediaPool: [...state.mediaPool, media],
+  })),
+
+  addItem: (item) => set((state) => ({
+    items: [...state.items, item],
+    selectedItemId: item.id,
+  })),
+
   splitItemAtCurrentTime: () => {
     const { items, currentTime, selectedItemId } = get();
     const itemToSplit = items.find(
@@ -61,27 +68,35 @@ export const useTimelineStore = create<TimelineState>((set, get) => ({
     if (!itemToSplit) return;
 
     const splitOffset = currentTime - itemToSplit.startTime;
-    const firstHalfDuration = splitOffset;
-    const secondHalfDuration = itemToSplit.duration - splitOffset;
 
-    const updatedItem: TrackItem = {
+    const firstHalf: TrackItem = {
       ...itemToSplit,
-      duration: firstHalfDuration,
+      duration: splitOffset,
     };
 
-    const newItem: TrackItem = {
+    const secondHalf: TrackItem = {
       ...itemToSplit,
       id: crypto.randomUUID(),
-      name: `${itemToSplit.name} (Copia)`,
+      name: `${itemToSplit.name} (2)`,
       startTime: currentTime,
-      duration: secondHalfDuration,
+      duration: itemToSplit.duration - splitOffset,
+      trimStart: itemToSplit.trimStart + splitOffset,
     };
 
     set({
       items: items.flatMap((item) =>
-        item.id === itemToSplit.id ? [updatedItem, newItem] : [item]
+        item.id === itemToSplit.id ? [firstHalf, secondHalf] : [item]
       ),
-      selectedItemId: newItem.id,
+      selectedItemId: secondHalf.id,
+    });
+  },
+
+  removeSelectedItem: () => {
+    const { items, selectedItemId } = get();
+    if (!selectedItemId) return;
+    set({
+      items: items.filter((item) => item.id !== selectedItemId),
+      selectedItemId: null,
     });
   },
 }));
