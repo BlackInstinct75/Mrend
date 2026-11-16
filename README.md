@@ -1,6 +1,6 @@
-# 🎬 Vegas-Cap — Editor de Vídeo Multiplataforma (Web & Mobile)
+# 🎬 Mrend — Editor de Vídeo Multiplataforma (Web & Mobile)
 
-**Vegas-Cap** es un editor de vídeo multiplataforma diseñado para combinar la rapidez, agilidad y efectos intuitivos de **CapCut** con la precisión de edición multipista y atajos de teclado profesionales de **Sony Vegas (VEGAS Pro)**.
+**Mrend** es un editor de vídeo multiplataforma diseñado para combinar la rapidez, agilidad y efectos intuitivos de **CapCut** con la precisión de edición multipista y atajos de teclado profesionales de **Sony Vegas (VEGAS Pro)**.
 
 El proyecto está estructurado como un **Monorepo** que divide la aplicación en una versión **Web (PC)** y una versión **Móvil (Android/iOS)**.
 
