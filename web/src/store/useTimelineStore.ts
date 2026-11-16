@@ -32,6 +32,7 @@ interface TimelineState {
   selectItem: (id: string | null) => void;
   addMedia: (media: MediaAsset) => void;
   addItem: (item: TrackItem) => void;
+  updateItemStartTime: (id: string, newStartTime: number) => void;
   splitItemAtCurrentTime: () => void;
   removeSelectedItem: () => void;
 }
@@ -54,6 +55,12 @@ export const useTimelineStore = create<TimelineState>((set, get) => ({
   addItem: (item) => set((state) => ({
     items: [...state.items, item],
     selectedItemId: item.id,
+  })),
+
+  updateItemStartTime: (id, newStartTime) => set((state) => ({
+    items: state.items.map((item) =>
+      item.id === id ? { ...item, startTime: Math.max(0, newStartTime) } : item
+    ),
   })),
 
   splitItemAtCurrentTime: () => {
